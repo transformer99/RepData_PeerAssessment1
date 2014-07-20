@@ -18,8 +18,8 @@ Nothing will be outputed from this section of code.
 
 Please make sure you are online if you don't have the data in place, or the code might fail downloading the required data. This part of code is tested only under Linux. You might need to modify the *method* parameter for the download.file() function to suit your system.
 
-```{r}
 
+```r
 dataURL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 
 ### Download data
@@ -32,7 +32,13 @@ if (file.exists("./activity.zip") || file.exists("./activity.csv")) {
   download.file(url=dataURL,destfile="./activity.zip",method="wget")
   
 }
+```
 
+```
+## == Data file (zip or csv format) exists, skipping downloading step 
+```
+
+```r
 ### Extract data
 if (file.exists("./activity.csv")) {
   message("== Data file (csv format) exists, skipping extraction...\r")
@@ -40,58 +46,85 @@ if (file.exists("./activity.csv")) {
   message("== Extracting data ... \r")
   unzip(zipfile="./activity.zip",exdir="./",)  
 }
+```
 
+```
+## == Data file (csv format) exists, skipping extraction...
+```
 
+```r
 ### Load data
 activityData <- read.csv("./activity.csv")
 
 #data$date <- as.Date(data$date,format="%Y-%m-%d")
 #data$interval <- as.factor(data$interval)
-
 ```
 
 
 ## What is mean total number of steps taken per day?
 For the next few steps we need the data aggregated per day.
-```{r aggregateData, echo=TRUE}
+
+```r
 dailyData <- aggregate(steps ~ date, activityData, FUN=sum)
 ```
 
 ### 1. Show a histogram
-```{r histogram, echo=TRUE}
+
+```r
 hist(dailyData$steps, main="Frequency of Total Steps per Day", xlab="Steps", breaks=10, col="red")
 ```
 
+![plot of chunk histogram](figure/histogram.png) 
+
 
 ### 2. Mean and Median
-```{r mean, echo=TRUE}
+
+```r
 myMean <- mean(dailyData$steps)
 myMean
+```
+
+```
+## [1] 10766
+```
+
+```r
 myMedian <- median(dailyData$steps)
 myMedian
 ```
 
-The mean steps per day is **`r format(myMean)`** and the median is **`r format(myMedian)`**.
+```
+## [1] 10765
+```
+
+The mean steps per day is **10766** and the median is **10765**.
 
 
 ## What is the average daily activity pattern?
 
 ### 1. Time series plot
 Find the average (mean) number of steps for each time interval across all days, and graph it.
-```{r intervalAggregation, echo=TRUE}
+
+```r
 intervalAgg <- aggregate(steps ~ interval, activityData, FUN=mean)
 plot(intervalAgg$interval, intervalAgg$steps,type="l", ylab="Avgerage Number of Steps", xlab="Interval")
-
 ```
+
+![plot of chunk intervalAggregation](figure/intervalAggregation.png) 
 
 ### 2. Find the max interval
-```{r maxInterval, echo=TRUE}
+
+```r
 maxInterval <- intervalAgg[intervalAgg$steps==max(intervalAgg$steps),]
 maxInterval
-
 ```
 
-The interval with the highest average is **`r maxInterval$interval`** with an average number of steps of **`r maxInterval$steps`**.
+```
+##     interval steps
+## 104      835 206.2
+```
+
+The interval with the highest average is **835** with an average number of steps of **206.1698**.
 
 ## Imputing missing values
 
@@ -99,12 +132,17 @@ The interval with the highest average is **`r maxInterval$interval`** with an av
 ### 1. How many NA values in the data?
 
 Note that the date and interval columns are always populated so we only need to check the steps column for NA values.
-```{r nacount, echo=TRUE}
+
+```r
 navalues <- is.na(activityData$steps)
 nacount <- sum(navalues)
 nacount
 ```
-There are **`r nacount`** records with NA steps.
+
+```
+## [1] 2304
+```
+There are **2304** records with NA steps.
 
 ### 2. Populate the missing values
 
@@ -112,7 +150,8 @@ Approach:  For imputing the missing values, it will be reasonably accurate to po
 
 
 
-```{r getDefaultData, echo=TRUE}
+
+```r
 #Pull out only the rows we want to manipulate
 naRows <- activityData[is.na(activityData),]
 
@@ -130,23 +169,25 @@ fullData <- rbind(goodRecords, newdata)
 
 Now aggregate it for each day, and create a histogram
 
-```{r fullDataHist, echo=TRUE}
+
+```r
 fullDailyData <- aggregate(steps ~ date, fullData, FUN=sum)
 hist(fullDailyData$steps, main="Daily Steps", xlab="Steps", breaks=10, col="red")
-
 ```
+
+![plot of chunk fullDataHist](figure/fullDataHist.png) 
 
 This histogram looks quite similar to the histogram above.  The only difference is that there are more records in the middle bucket.  This makes sense, since we just manufactured a bunch of records based on mean values.
 
 
 And now calculate the mean/median of the new data.
-```{r newMean, echo=TRUE}
+
+```r
 newMean <- mean(fullDailyData$steps)
 newMedian <- median(fullDailyData$steps)
-
 ```
 
-In this modified data, mean steps per day is **`r format(newMean)`** and the median is **`r format(newMedian)`**.  This compares to values of **`r format(myMean)`** and **`r format(myMedian)`** in the above steps.  The mean has not changed, but the median has changed slightly.
+In this modified data, mean steps per day is **10766** and the median is **10766**.  This compares to values of **10766** and **10765** in the above steps.  The mean has not changed, but the median has changed slightly.
 
 Conclusion: Setting the NA values to the median has a minor effect on the data when looking at the mean/median values. However, it does increase the shape of the histogram and make the data appear more dense than it would likely be if actual values were available.
 
@@ -155,8 +196,8 @@ Conclusion: Setting the NA values to the median has a minor effect on the data w
 For this part of the assignment we'll continue using the fully populated data with the NA values imputed.
 
 Find the weekday for each date, then figure out if that day is on a weekend or not. 
-```{r weekdaySetup1, echo=TRUE}
 
+```r
 #Add a new column to the data with name of the day of the week
 fullData$weekday <- weekdays(as.POSIXlt(fullData$date))
 
@@ -173,17 +214,27 @@ fullData$weekend <- t
 weekendAgg <- aggregate(steps ~ interval + weekend, fullData, FUN=mean)
 
 head(weekendAgg)
+```
 
+```
+##   interval weekend   steps
+## 1        0 weekday 2.25115
+## 2        5 weekday 0.44528
+## 3       10 weekday 0.17317
+## 4       15 weekday 0.19790
+## 5       20 weekday 0.09895
+## 6       25 weekday 1.59036
 ```
 
 
 
 
 Now make a plot
-```{r weekdayGraph, echo=TRUE}
+
+```r
 library(lattice)
 
 xyplot(steps ~ interval | weekend, weekendAgg, type="l", layout=c(1,2), xlab="Interval", ylab="Number of steps")
-
-
 ```
+
+![plot of chunk weekdayGraph](figure/weekdayGraph.png) 
